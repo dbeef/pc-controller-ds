@@ -1,6 +1,5 @@
 import socket
-import threading
-import time
+import struct
 
 import pyautogui
 
@@ -9,75 +8,22 @@ nintendo_port = 8080
 
 nds_client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 nds_client.connect((nintendo_ip, nintendo_port))
-keys_pressed = []
 
 
-def handle_keys():
-    print("Pressed: " + keys_pressed)  
-
-    # NDS - dpad
-    if keys_pressed[0] == '1':
-        pyautogui.press('right')
-
-    if keys_pressed[1] == '1':
-        pyautogui.press('left')
-
-    if keys_pressed[2] == '1':
-        pyautogui.press('down')
-
-    if keys_pressed[3] == '1':
-        pyautogui.press('up')
-
-    # NDS - keypad
-
-    if keys_pressed[4] == '1':
-        if keys_pressed[8] == '1':
-            pyautogui.moveRel(xOffset=None, yOffset=-4, duration=0.12)
-        else:
-            pyautogui.moveRel(xOffset=None, yOffset=-36, duration=0.1)
-
-    if keys_pressed[5] == '1':
-        if keys_pressed[8] == '1':
-            pyautogui.moveRel(xOffset=None, yOffset=4, duration=0.12)
-        else:
-            pyautogui.moveRel(xOffset=None, yOffset=36, duration=0.1)
-
-    if keys_pressed[6] == '1':
-        if keys_pressed[8] == '1':
-            pyautogui.moveRel(xOffset=-4, yOffset=None, duration=0.12)
-        else:
-            pyautogui.moveRel(xOffset=-36, yOffset=None, duration=0.1)
-
-    if keys_pressed[7] == '1':
-        if keys_pressed[8] == '1':
-            pyautogui.moveRel(xOffset=4, yOffset=None, duration=0.12)
-        else:
-            pyautogui.moveRel(xOffset=36, yOffset=None, duration=0.1)
-
-    # NDS - R bumper
-
-    if keys_pressed[9] == '1':
-        pyautogui.press('space')  # ctrl-c to copy
-
-    # NDS SELECT / START
-
-    if keys_pressed[10] == '1':
-        pyautogui.click()  # ctrl-c to copy
-
-    if keys_pressed[11] == '1':
-        pyautogui.rightClick()  # ctrl-c to copy
+def set_nth_bit(n):
+    return 1 << n
 
 
-key_thread = threading.Thread(target=handle_keys, args=[])
+mask_a_key = set_nth_bit(0)
+
 while True:
-    timestamp_total = time.time()
     nds_client.send('A'.encode('ascii'))
-    keys_pressed = (nds_client.recv(12)).decode("ascii")
+    packet = nds_client.recv(2) #otrzymujemy pakiet z naszymi klawiszami
+    keys_held_little_endian = struct.unpack('<H', packet) #'H' oznacza unsigned short, '<' oznacza little endian
+    print("Received as bytes : " + str(bin(keys_held_little_endian[0])))
+    print("Received as integer : " + str(keys_held_little_endian[0]))
+    key_a_pressed = (keys_held_little_endian[0] & mask_a_key) != 0
+    print("Masked 1st bit - A key - " + str((key_a_pressed)))
 
-    if key_thread.is_alive():
-        key_thread.join()
-
-    key_thread = threading.Thread(target=handle_keys, args=[])
-    key_thread.start()
-    total_time = time.time() - timestamp_total
-    print("Total time: " + str(total_time))
+    if key_a_pressed:
+        pyautogui.press('space')
