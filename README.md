@@ -1,5 +1,6 @@
-# controller-ds
+# pc-controller-ds
 Capturing key input on NDS and sending it to PC
+https://www.youtube.com/watch?v=m06VW7e9yyg
 
 <h2 align="center">Dependencies</h2>
 <ul>
