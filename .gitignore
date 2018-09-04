@@ -1,4 +1,6 @@
 nintendo-server/build/
 nintendo-server/cmake-build-debug/
+nintendo-server/.idea/
+desktop-client/.idea/
 .idea/
 *.swp
